@@ -32,9 +32,11 @@ Because this tool has a lot of documents than other tools like Parcel or CRA so 
 
 Hooks(useState and useEffect):
 
-useState use for monitoring the task list and input, when something change the component will automate rendering. In this test, I have applied that into toggle state of the task.
+useState use for monitoring and saving the task list and input, when something change the component will automate rendering. In this test, I have applied that into filter state of the task, add new task, set task.
 
-While the Side effects are the actions that should not do in the render and that why we need to use useEffect to handle it. Like calling API, store data in localStorage,... When we store data in localStorage, reloading the page/website won't lost it but when you reloaded the development server, it will lose all data.
+While the Side effects are the actions that happen outside the normal flow (it affect something outside the function itself) and that why we need to use useEffect to handle it. Like calling API, store data in localStorage,... 
+
+useEffect let dev run side effect after React render the component to the screen. This will help you safely interact with localStorage in this test.
 
 
 

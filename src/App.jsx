@@ -12,14 +12,14 @@ import {
 
 export default function App() {
   const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem("tasks"); // Side effect
+    const saved = localStorage.getItem("tasks"); // Side effect => and because this just read data so it not dangerous
     return saved ? JSON.parse(saved) : [];
   });
   const [newTask, setNewTask] = useState("");
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));  //Side effect
+    localStorage.setItem("tasks", JSON.stringify(tasks));  //Side effect => This write data to the localStorage if we dont have useEffect it might cause render loop
   }, [tasks]);
 
   const addTask = () => {
