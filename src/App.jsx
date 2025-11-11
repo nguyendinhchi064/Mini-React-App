@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TodoItem from "./components/TodoItems";
 import {
   Container,
   Title,
   InputRow,
   Input,
+  FloatingInput,
+  FloatingLabel,
   Button,
   FilterBar,
   FilterButton,
@@ -12,15 +14,25 @@ import {
 
 export default function App() {
   const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem("tasks"); // Side effect => and because this just read data so it not dangerous
+    const saved = localStorage.getItem("tasks");
     return saved ? JSON.parse(saved) : [];
   });
   const [newTask, setNewTask] = useState("");
   const [filter, setFilter] = useState("all");
 
+  // transient flag for InputRow animation when a new task is added
+  const [pushed, setPushed] = useState(false);
+  const pushTimer = useRef(null);
+
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));  //Side effect => This write data to the localStorage if we dont have useEffect it might cause render loop
+    localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
+
+  useEffect(() => {
+    return () => {
+      if (pushTimer.current) clearTimeout(pushTimer.current);
+    };
+  }, []);
 
   const addTask = () => {
     if (!newTask.trim()) return;
@@ -29,20 +41,21 @@ export default function App() {
       text: newTask.trim(),
       completed: false,
     };
-    setTasks([...tasks, task]);
+    setTasks((prev) => [...prev, task]);
     setNewTask("");
+
+    // trigger InputRow slide-up briefly
+    setPushed(true);
+    if (pushTimer.current) clearTimeout(pushTimer.current);
+    pushTimer.current = setTimeout(() => setPushed(false), 220); // duration matches styles.js transition/animation
   };
 
   const toggleTask = (id) => {
-    setTasks(
-      tasks.map((t) =>
-        t.id === id ? { ...t, completed: !t.completed } : t
-      )
-    );
+    setTasks((t) => t.map((x) => (x.id === id ? { ...x, completed: !x.completed } : x)));
   };
 
   const deleteTask = (id) => {
-    setTasks(tasks.filter((t) => t.id !== id));
+    setTasks((t) => t.filter((x) => x.id !== id));
   };
 
   const filteredTasks = tasks.filter((t) => {
@@ -55,13 +68,18 @@ export default function App() {
     <Container>
       <Title>React Todo Mini Test</Title>
 
-      <InputRow>
-        <Input
-          placeholder="Add a new task..."
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addTask()}
-        />
+      <InputRow $pushed={pushed}>
+        <FloatingInput>
+          {/* keep a single-space placeholder so :placeholder-shown works */}
+          <Input
+            placeholder=" "
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addTask()}
+          />
+          <FloatingLabel>Add a new task...</FloatingLabel>
+        </FloatingInput>
+
         <Button onClick={addTask}>Add</Button>
       </InputRow>
 
@@ -69,7 +87,7 @@ export default function App() {
         {["all", "active", "completed"].map((f) => (
           <FilterButton
             key={f}
-            active={filter === f}
+            $active={filter === f}
             onClick={() => setFilter(f)}
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
